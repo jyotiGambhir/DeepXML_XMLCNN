@@ -1,0 +1,14 @@
+==========================================
+SLURM_JOB_ID = 148164
+SLURM_NODELIST = gnode02
+SLURM_JOB_GPUS = 0,1,2,3
+==========================================
+/home/nilabja.bhattacharya/anaconda3/lib/python3.7/site-packages/sklearn/externals/joblib/__init__.py:15: FutureWarning: sklearn.externals.joblib is deprecated in 0.21 and will be removed in 0.23. Please import this functionality directly from joblib, which can be installed with: pip install joblib. If this warning is raised when loading pickled models, you may need to re-serialize those models with scikit-learn 0.21+.
+  warnings.warn(msg, category=FutureWarning)
+/home/nilabja.bhattacharya/anaconda3/lib/python3.7/site-packages/torch/nn/_reduction.py:43: UserWarning: size_average and reduce args will be deprecated, please use reduction='sum' instead.
+  warnings.warn(warning.format(ret))
+Saving Model to: wiki
+../embedding_weights/glove.840B.300d.txt
+Loading existing Word2Vec model (Glove.6B.300d)
+Train Loss; Precision Scores [1->5] [0.8067] [0.6073] [0.4969] [0.4259] [0.379] Cross Entropy 166.44509725140128;
+Test Loss; Precision Scores [1->5] [0.8079] [0.5541] [0.4389] [0.369] [0.3241] Cross Entropy 178.12086217715435;

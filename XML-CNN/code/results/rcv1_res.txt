@@ -1,0 +1,5 @@
+Saving Model to: Gen_data_CNN_Z_dim-100_mb_size-20_hidden_dims-512_preproc-0_loss-BCELoss_sequence_length-500_embedding_dim-300_params.vocab_size=30000
+../embedding_weights/glove.6B.300d.txt
+Loading existing Word2Vec model (Glove.6B.300d)
+Train Loss; Precision Scores [1->5] [0.9997] [0.9833] [0.8909] [0.7277] [0.6109] Cross Entropy 3.9692697275669144;
+Test Loss; Precision Scores [1->5] [0.9614] [0.8915] [0.7874] [0.6481] [0.549] Cross Entropy 8.558920444924349;
