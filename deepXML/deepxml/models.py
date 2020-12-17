@@ -19,6 +19,8 @@ from typing import Optional, Mapping, Tuple
 from deepxml.evaluation import get_p_5, get_n_5
 from deepxml.modules import *
 from deepxml.optimizers import *
+from header import *
+from cnn_test import *
 
 
 __all__ = ['Model', 'XMLModel']
@@ -36,6 +38,7 @@ class Model(object):
             gradient_clip_value=5.0,
             device_ids=None,
             **kwargs):
+        print("in Model init")
         self.model = nn.DataParallel(
             network(**kwargs).cuda(), device_ids=device_ids)
         self.loss_fn = nn.BCEWithLogitsLoss()
@@ -64,6 +67,75 @@ class Model(object):
     def get_optimizer(self, **kwargs):
         self.optimizer = DenseSparseAdam(self.model.parameters(), **kwargs)
 
+
+    def train_xml_deep(self,
+            train_loader: DataLoader,
+            valid_loader: DataLoader,
+            x_tr, y_tr, x_te, y_te, embedding_weights, params, opt_params: Optional[Mapping] = None,nb_epoch=100,
+            step=100,
+            k=5,
+            early=50,
+            verbose=True,
+            swa_warmup=None,
+            **kwargs):
+        model = xmlCNN(params, embedding_weights)
+        if(torch.cuda.is_available()):
+          print("--------------- Using GPU! ---------")
+          model.params.dtype_f = torch.cuda.FloatTensor
+          model.params.dtype_i = torch.cuda.LongTensor
+          
+          model = model.cuda()
+        else:
+          model.params.dtype_f = torch.FloatTensor
+          model.params.dtype_i = torch.LongTensor
+          print("=============== Using CPU =========")
+
+        optimizer = optim.Adam(filter(lambda p: p.requires_grad,model.parameters()), lr=params.lr)
+        print(model);print("%"*100)
+
+        if params.dataparallel:
+          model = nn.DataParallel(model)
+
+        if(len(params.load_model)):
+          #params.model_name = params.load_model
+          print(params.load_model)
+          model, optimizer, init = load_model(model, params.load_model, optimizer=optimizer)
+        else:
+          init = 0
+        print("initiliased xml cnn")
+        global_step, best_n5, e = 0, 0.0, 0
+        for epoch_idx in range(nb_epoch):
+            if epoch_idx == swa_warmup:
+                self.swa_init()
+            for i, (train_x, train_y) in enumerate(train_loader, 1):
+
+              print(type(train_x))
+              print(train_x.get_shape())
+              print(type(train_y))
+              print(train_y.get_shape())
+                # global_step += 1
+                # loss = self.train_step_xml_deep(train_x, train_y.cuda())
+                # if global_step % step == 0:
+                #     self.swa_step()
+                #     self.swap_swa_params()
+                #     labels = np.concatenate([self.predict_step(valid_x, k)[
+                #                             1] for valid_x in valid_loader])
+                #     targets = valid_loader.dataset.data_y
+                #     p5, n5 = get_p_5(labels, targets), get_n_5(labels, targets)
+                #     if n5 > best_n5:
+                #         self.save_model()
+                #         best_n5, e = n5, 0
+                #     else:
+                #         e += 1
+                #         if early is not None and e > early:
+                #             return
+                #     self.swap_swa_params()
+                #     if verbose:
+                #         logger.info(
+                #             F'{epoch_idx} {i * train_loader.batch_size} train loss: {round(loss, 5)} '
+                #             F'P@5: {round(p5, 5)} nDCG@5: {round(n5,
+
+
     def train(
             self,
             train_loader: DataLoader,
@@ -76,34 +148,35 @@ class Model(object):
             verbose=True,
             swa_warmup=None,
             **kwargs):
-        self.get_optimizer(**({} if opt_params is None else opt_params))
-        global_step, best_n5, e = 0, 0.0, 0
-        for epoch_idx in range(nb_epoch):
-            if epoch_idx == swa_warmup:
-                self.swa_init()
-            for i, (train_x, train_y) in enumerate(train_loader, 1):
+        print("in Model train")
+        # self.get_optimizer(**({} if opt_params is None else opt_params))
+        # global_step, best_n5, e = 0, 0.0, 0
+        # for epoch_idx in range(nb_epoch):
+        #     if epoch_idx == swa_warmup:
+        #         self.swa_init()
+        #     for i, (train_x, train_y) in enumerate(train_loader, 1):
 
-                global_step += 1
-                loss = self.train_step(train_x, train_y.cuda())
-                if global_step % step == 0:
-                    self.swa_step()
-                    self.swap_swa_params()
-                    labels = np.concatenate([self.predict_step(valid_x, k)[
-                                            1] for valid_x in valid_loader])
-                    targets = valid_loader.dataset.data_y
-                    p5, n5 = get_p_5(labels, targets), get_n_5(labels, targets)
-                    if n5 > best_n5:
-                        self.save_model()
-                        best_n5, e = n5, 0
-                    else:
-                        e += 1
-                        if early is not None and e > early:
-                            return
-                    self.swap_swa_params()
-                    if verbose:
-                        logger.info(
-                            F'{epoch_idx} {i * train_loader.batch_size} train loss: {round(loss, 5)} '
-                            F'P@5: {round(p5, 5)} nDCG@5: {round(n5, 5)} early stop: {e}')
+        #         global_step += 1
+        #         loss = self.train_step(train_x, train_y.cuda())
+        #         if global_step % step == 0:
+        #             self.swa_step()
+        #             self.swap_swa_params()
+        #             labels = np.concatenate([self.predict_step(valid_x, k)[
+        #                                     1] for valid_x in valid_loader])
+        #             targets = valid_loader.dataset.data_y
+        #             p5, n5 = get_p_5(labels, targets), get_n_5(labels, targets)
+        #             if n5 > best_n5:
+        #                 self.save_model()
+        #                 best_n5, e = n5, 0
+        #             else:
+        #                 e += 1
+        #                 if early is not None and e > early:
+        #                     return
+        #             self.swap_swa_params()
+        #             if verbose:
+        #                 logger.info(
+        #                     F'{epoch_idx} {i * train_loader.batch_size} train loss: {round(loss, 5)} '
+        #                     F'P@5: {round(p5, 5)} nDCG@5: {round(n5, 5)} early stop: {e}')
 
     def predict(
             self,

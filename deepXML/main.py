@@ -88,16 +88,16 @@ def load_cnn_data():
   # -----------------------  Loss ------------------------------------
   params.loss_fn = torch.nn.BCELoss(size_average=False)
   # -------------------------- Params ---------------------------------------------
-  # if params.model_variation=='pretrain':
-  #     embedding_weights = load_word2vec(params)
-  # else:
-  #     embedding_weights = None
+  if params.model_variation=='pretrain':
+      embedding_weights = load_word2vec(params)
+  else:
+      embedding_weights = None
 
   if torch.cuda.is_available():
       params.dtype = torch.cuda.FloatTensor
   else:
       params.dtype = torch.FloatTensor
-  embedding_weights = ""
+  # embedding_weights = ""
   return x_tr, y_tr, x_te, y_te, embedding_weights, params
 
 
@@ -155,16 +155,16 @@ def main():
         logger.info('Size of Validation Set: {}'.format(len(valid_x)))
 
         logger.info('Training')
-    print("here.......")
+        print("here.......")
 
-    #     if 'cluster' not in model_cnf:
-    #         train_loader = DataLoader(MultiLabelDataset(train_x, train_y),
-    #                                   model_cnf['train']['batch_size'], shuffle=True, num_workers=4)
-    #         valid_loader = DataLoader(MultiLabelDataset(valid_x, valid_y, training=False),
-    #                                   model_cnf['valid']['batch_size'], num_workers=4)
-    #         model = Model(network=AttentionRNN, labels_num=labels_num, model_path=model_path, emb_init=emb_init,
-    #                       **data_cnf['model'], **model_cnf['model'])
-    #         model.train(train_loader, valid_loader, **model_cnf['train'])
+        if 'cluster' not in model_cnf:
+            train_loader = DataLoader(MultiLabelDataset(train_x, train_y),
+                                      model_cnf['train']['batch_size'], shuffle=True, num_workers=4)
+            valid_loader = DataLoader(MultiLabelDataset(valid_x, valid_y, training=False),
+                                      model_cnf['valid']['batch_size'], num_workers=4)
+            model = Model(network=AttentionRNN, labels_num=labels_num, model_path=model_path, emb_init=emb_init,
+                          **data_cnf['model'], **model_cnf['model'])
+            model.train_xml_deep(train_loader, valid_loader,  x_tr, y_tr, x_te, y_te, embedding_weights, params, **model_cnf['train'])
     #     else:
     #         model = FastAttentionXML(labels_num, data_cnf, model_cnf, tree_id)
     #         model.train(train_x, train_y, valid_x, valid_y, mlb)
