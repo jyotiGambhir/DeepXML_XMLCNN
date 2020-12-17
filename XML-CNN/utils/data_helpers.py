@@ -140,7 +140,7 @@ def load_data(params, max_length=5000, vocab_size=100000):
     elif params.data_set == 'Wiki10-31K':
         path = '../datasets/Wiki10-31K/'
     elif params.data_set == 'EUR-Lex':
-        path = '../datasets/Eurlex/'
+        path = '/content/drive/MyDrive/DeepXML/EUR-Lex/'
     # path_wiki = '../datasets/Wiki10-31K/'
     # path_eu = '../datasets/Eurlex/'
     train = getData(path+'train_raw_texts.txt',path+'train_labels.txt')
@@ -174,3 +174,4 @@ def batch_iter(data, batch_size, num_epochs):
             start_index = batch_num * batch_size
             end_index = min((batch_num + 1) * batch_size, data_size)
             yield shuffled_data[start_index:end_index]
+

@@ -62,7 +62,7 @@ def load_word2vec(params):
     num_features    # Word vector dimensionality
     """
 
-    model_dir = '../embedding_weights'
+    model_dir = '/content/drive/MyDrive/DeepXML/'
 
     if params.model_type == 'GoogleNews':
         model_name = join(model_dir, 'GoogleNews-vectors-negative300.bin.gz')
@@ -114,4 +114,5 @@ if __name__=='__main__':
     print("Loading data...")
     x, _, _, params.vocabulary_inv = data_helpers.load_data()
     w = train_word2vec(x, params.vocabulary_inv)
+
 
