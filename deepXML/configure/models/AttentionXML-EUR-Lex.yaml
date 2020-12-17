@@ -9,13 +9,13 @@ model:
 
 train:
   batch_size: 32
-  nb_epoch: 50
+  nb_epoch: 3
   swa_warmup: 10
 
 valid:
-  batch_size: 40
+  batch_size: 32
 
 predict:
-  batch_size: 40
+  batch_size: 32
 
 path: models

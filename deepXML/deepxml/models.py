@@ -52,6 +52,8 @@ class Model(object):
         self.optimizer.zero_grad()
         self.model.train()
         scores = self.model(train_x)
+        print("Scores shape",scores.shape)
+        print("Train y shape",train_y.shape)
         loss = self.loss_fn(scores, train_y)
         loss.backward()
         self.clip_gradient()
@@ -67,12 +69,30 @@ class Model(object):
     def get_optimizer(self, **kwargs):
         self.optimizer = DenseSparseAdam(self.model.parameters(), **kwargs)
 
+    def train_step_xml_deep(self, train_x_xmlcnn, train_y_xmlcnn, train_x_deepxml, train_y_deepxml, model):
+      # self.optimizer.zero_grad()
+      print("train shape xml ", train_x_xmlcnn.shape)
+      print("y shape deep xml ", train_y_deepxml.shape)
+      l, scores = model.forward(train_x_xmlcnn, train_y_xmlcnn)
+      print("returned from forward xmlcnn")
+      # x = train_y_deepxml.shape[0]
+      # y = train_y_deepxml.shape[1]
+      # scores = torch.reshape(scores, (x,y))
+      print("scores shape ", scores.shape)
+      print("train_y_deepxml shape ", train_y_deepxml.shape)
+      loss = self.loss_fn(scores, train_y_deepxml)
+      print("computed loss")
+      loss.backward()
+      self.clip_gradient()
+      # self.optimizer.step(closure=None)
+      return loss.item()
+
 
     def train_xml_deep(self,
             train_loader: DataLoader,
             valid_loader: DataLoader,
             x_tr, y_tr, x_te, y_te, embedding_weights, params, opt_params: Optional[Mapping] = None,nb_epoch=100,
-            step=100,
+            step=2,
             k=5,
             early=50,
             verbose=True,
@@ -103,37 +123,49 @@ class Model(object):
         else:
           init = 0
         print("initiliased xml cnn")
+        
+        num_mb = len(train_loader)
         global_step, best_n5, e = 0, 0.0, 0
-        for epoch_idx in range(nb_epoch):
+        dataloader_iterator = iter(train_loader)
+        for epoch_idx in range(init, params.num_epochs):
             if epoch_idx == swa_warmup:
                 self.swa_init()
-            for i, (train_x, train_y) in enumerate(train_loader, 1):
+            for i in range(1,int(num_mb)):
 
-              print(type(train_x))
-              print(train_x.get_shape())
-              print(type(train_y))
-              print(train_y.get_shape())
-                # global_step += 1
-                # loss = self.train_step_xml_deep(train_x, train_y.cuda())
-                # if global_step % step == 0:
-                #     self.swa_step()
-                #     self.swap_swa_params()
-                #     labels = np.concatenate([self.predict_step(valid_x, k)[
-                #                             1] for valid_x in valid_loader])
-                #     targets = valid_loader.dataset.data_y
-                #     p5, n5 = get_p_5(labels, targets), get_n_5(labels, targets)
-                #     if n5 > best_n5:
-                #         self.save_model()
-                #         best_n5, e = n5, 0
-                #     else:
-                #         e += 1
-                #         if early is not None and e > early:
-                #             return
-                #     self.swap_swa_params()
-                #     if verbose:
-                #         logger.info(
-                #             F'{epoch_idx} {i * train_loader.batch_size} train loss: {round(loss, 5)} '
-                #             F'P@5: {round(p5, 5)} nDCG@5: {round(n5,
+              train_x_xmlcnn , train_y_xmlcnn =  load_batch_cnn(x_tr, y_tr, params, i)
+              try:
+                train_x_deepxml , train_y_deepxml = next(dataloader_iterator)
+              except StopIteration:
+                break
+              if train_x_xmlcnn.shape[0] != train_y_deepxml.shape[0]:
+                break
+              # print(type(train_x))
+              # print(train_x.get_shape())
+              # print(type(train_y))
+              # print(train_y.get_shape())
+              print("running ", i)
+              global_step += 1
+              loss = self.train_step_xml_deep(train_x_xmlcnn, train_y_xmlcnn, train_x_deepxml, train_y_deepxml.cuda(), model)
+              print("after train_step")
+              if global_step % step == 0:
+                  self.swa_step()
+                  self.swap_swa_params()
+                  labels = np.concatenate([self.predict_step(valid_x, k)[
+                                          1] for valid_x in valid_loader])
+                  targets = valid_loader.dataset.data_y
+                  p5, n5 = get_p_5(labels, targets), get_n_5(labels, targets)
+                  if n5 > best_n5:
+                      self.save_model()
+                      best_n5, e = n5, 0
+                  else:
+                      e += 1
+                      if early is not None and e > early:
+                          return
+                  self.swap_swa_params()
+                  if verbose:
+                      logger.info(
+                          F'{epoch_idx} {i * train_loader.batch_size} train loss: {round(loss, 5)} '
+                          F'P@5: {round(p5, 5)} nDCG@5: {round(n5, 5)} early stop: {e}')
 
 
     def train(

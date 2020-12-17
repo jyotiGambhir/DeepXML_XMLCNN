@@ -34,8 +34,10 @@ class cnn_encoder(torch.nn.Module):
             self.conv_layers.append(l_conv)
             self.pool_layers.append(l_pool)
         #print(fin_l_out_size, params.hidden_dims)
+        # params.y_dim = 3955
         self.fin_layer = nn.Linear(fin_l_out_size, params.hidden_dims)
         self.out_layer = nn.Linear(params.hidden_dims, params.y_dim)
+        print("y_dim is ", params.y_dim)
         torch.nn.init.xavier_uniform_(self.fin_layer.weight)
         torch.nn.init.xavier_uniform_(self.out_layer.weight)
 
@@ -60,12 +62,16 @@ class cnn_encoder(torch.nn.Module):
             o = conv_out[0]
         #print(o.shape)
         o = self.fin_layer(o)
-        #print(o.shape)
-        if fl == 1:
-                return o
-        o = nn.functional.relu(o)
-        if(self.params.dropouts):
-            o = self.drp5(o) 
-        o = self.out_layer(o)
-        o = torch.sigmoid(o)
+        print("fin_layer shape", o.shape)
         return o
+        # if fl == 1:
+        #         return o
+        # o = nn.functional.relu(o)
+        # if(self.params.dropouts):
+        #     o = self.drp5(o) 
+        # o = self.out_layer(o)
+        # print("out_layer shape", o.shape)
+        # o = torch.sigmoid(o)
+        # print("after sigmoid shape ", o.shape)
+        # return o
+

@@ -97,7 +97,7 @@ class MLAttention(nn.Module):
         attention = F.softmax(attention, -1)
         # To store attention score
         file_name = str(attention.shape[1]) + "X" + str(attention.shape[2])
-        filepath = "{}/DeepXML/results/attn_score_{}.npy".format(os.getcwd(), file_name)
+        filepath = "{}/DeepXML_XMLCNN/deepXML/results/attn_score_{}.npy".format(os.getcwd(), file_name)
         if os.path.isfile(filepath):
             attn_prev = np.load(filepath)
             attn_new = np.sum(attention.cpu().detach().numpy(), axis=0)

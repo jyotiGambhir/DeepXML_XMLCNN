@@ -140,7 +140,7 @@ def main():
             random_state = data_cnf['valid'].get('random_state', 1240)
             train_x, valid_x, train_labels, valid_labels = train_test_split(train_x, train_labels,
                                                                             test_size=data_cnf['valid']['size'],
-                                                                            random_state=random_state)
+                                                                            random_state=0)
         else:
             valid_x, valid_labels = get_data(
                 data_cnf['valid']['texts'], data_cnf['valid']['labels'])
@@ -165,44 +165,44 @@ def main():
             model = Model(network=AttentionRNN, labels_num=labels_num, model_path=model_path, emb_init=emb_init,
                           **data_cnf['model'], **model_cnf['model'])
             model.train_xml_deep(train_loader, valid_loader,  x_tr, y_tr, x_te, y_te, embedding_weights, params, **model_cnf['train'])
-    #     else:
-    #         model = FastAttentionXML(labels_num, data_cnf, model_cnf, tree_id)
-    #         model.train(train_x, train_y, valid_x, valid_y, mlb)
-    #         logger.info(type(model))
-    #         logger.info(type(model.models))
-    #         logger.info(type(model.models[0]))
-    #     logger.info('Finish Training')
+        else:
+            model = FastAttentionXML(labels_num, data_cnf, model_cnf, tree_id)
+            model.train(train_x, train_y, valid_x, valid_y, mlb)
+            logger.info(type(model))
+            logger.info(type(model.models))
+            logger.info(type(model.models[0]))
+        logger.info('Finish Training')
 
-    # if mode is None or mode == 'eval':
-    #     logger.info('Loading Test Set')
-    #     mlb = get_mlb(data_cnf['labels_binarizer'])
-    #     labels_num = len(mlb.classes_)
-    #     test_x, _ = get_data(data_cnf['test']['texts'], None)
-    #     logger.info('Size of Test Set: {}'.format(len(test_x)))
+    if mode is None or mode == 'eval':
+        logger.info('Loading Test Set')
+        mlb = get_mlb(data_cnf['labels_binarizer'])
+        labels_num = len(mlb.classes_)
+        test_x, _ = get_data(data_cnf['test']['texts'], None)
+        logger.info('Size of Test Set: {}'.format(len(test_x)))
 
-    #     logger.info('Predicting')
-    #     if 'cluster' not in model_cnf:
-    #         test_loader = DataLoader(MultiLabelDataset(test_x), model_cnf['predict']['batch_size'],
-    #                                  num_workers=4)
-    #         if model is None:
-    #             model = Model(network=AttentionRNN, labels_num=labels_num, model_path=model_path, emb_init=emb_init,
-    #                           **data_cnf['model'], **model_cnf['model'])
-    #         scores, labels = model.predict(
-    #             test_loader, k=model_cnf['predict'].get('k', 100))
-    #     else:
-    #         if model is None:
-    #             model = FastAttentionXML(
-    #                 labels_num, data_cnf, model_cnf, tree_id)
-    #         logger.info(type(model))
-    #         logger.info(type(model.models))
-    #         logger.info(type(model.models[0]))
+        logger.info('Predicting')
+        if 'cluster' not in model_cnf:
+            test_loader = DataLoader(MultiLabelDataset(test_x), model_cnf['predict']['batch_size'],
+                                     num_workers=4)
+            if model is None:
+                model = Model(network=AttentionRNN, labels_num=labels_num, model_path=model_path, emb_init=emb_init,
+                              **data_cnf['model'], **model_cnf['model'])
+            scores, labels = model.predict(
+                test_loader, k=model_cnf['predict'].get('k', 100))
+        else:
+            if model is None:
+                model = FastAttentionXML(
+                    labels_num, data_cnf, model_cnf, tree_id)
+            logger.info(type(model))
+            logger.info(type(model.models))
+            logger.info(type(model.models[0]))
 
-    #         scores, labels = model.predict(test_x)
+            scores, labels = model.predict(test_x)
 
-    #     logger.info('Finish Predicting')
-    #     labels = mlb.classes_[labels]
-    #     output_res(data_cnf['output']['res'],
-    #                '{}-{}{}'.format(model_name, data_name, tree_id), scores, labels)
+        logger.info('Finish Predicting')
+        labels = mlb.classes_[labels]
+        output_res(data_cnf['output']['res'],
+                   '{}-{}{}'.format(model_name, data_name, tree_id), scores, labels)
 
 
 if __name__ == '__main__':
